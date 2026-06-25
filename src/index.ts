@@ -36,7 +36,7 @@ async function main() {
 ╠══════════════════════════════════════════╣
 ║  HTTP:   http://localhost:${env.PORT}          ║
 ║  Socket: ws://localhost:${env.PORT}            ║
-║  CORS:   ${env.CORS_ORIGIN.padEnd(30)}║
+║  CORS:   ${env.CORS_ORIGIN.join(', ').padEnd(30)}║
 ╚══════════════════════════════════════════╝
     `);
   });
