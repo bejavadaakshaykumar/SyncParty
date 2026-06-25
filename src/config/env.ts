@@ -9,5 +9,5 @@ export const env = {
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/syncparty',
   JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
   YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY || '',
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  CORS_ORIGIN: (process.env.CORS_ORIGIN || process.env.CLIENT_URL || 'https://togetherwelisten.netlify.app').split(',').map(o => o.trim().replace(/\/$/, '')),
 };
