@@ -71,13 +71,13 @@ router.get('/video/:id', authMiddleware, async (req, res) => {
     if (!env.YOUTUBE_API_KEY) {
       // Use yt-search to get video details
       try {
-        const video = await ytSearch({ videoId });
+        const video: any = await ytSearch({ videoId: videoId as string } as any);
         res.json({
           videoId: video.videoId,
           title: video.title,
           thumbnail: video.thumbnail,
-          channelTitle: video.author.name,
-          duration: video.seconds,
+          channelTitle: video.author?.name || 'Unknown',
+          duration: video.seconds || 0,
         });
       } catch (err) {
         // Ultimate fallback
