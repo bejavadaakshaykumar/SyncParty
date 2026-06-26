@@ -41,5 +41,6 @@ export function buildSyncState(track: IRoom['currentTrack']) {
     duration: track.duration,
     time: calculateCurrentTime(track),
     isPlaying: track.isPlaying,
+    timestamp: Date.now(),
   };
 }
