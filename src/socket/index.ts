@@ -1,7 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
-import { setupRoomHandlers } from './roomHandlers.js';
+import { setupRoomHandlers, handleUserLeftRoom } from './roomHandlers.js';
 import { setupPlayerHandlers } from './playerHandlers.js';
 import { setupQueueHandlers } from './queueHandlers.js';
 import { setupChatHandlers } from './chatHandlers.js';
@@ -45,13 +45,10 @@ export function setupSocketIO(io: Server): void {
     setupChatHandlers(io, socket);
 
     // Handle disconnect
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       const userData = socketUserMap.get(socket.id);
       if (userData?.roomCode) {
-        socket.to(userData.roomCode).emit('room:user-left', {
-          userId: userData.userId,
-          username: userData.username,
-        });
+        await handleUserLeftRoom(io, socket, userData.roomCode, userData.userId, userData.username);
       }
       socketUserMap.delete(socket.id);
       console.log(`🔌 User disconnected: ${username} (${socket.id})`);

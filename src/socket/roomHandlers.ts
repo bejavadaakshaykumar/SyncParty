@@ -3,6 +3,47 @@ import { Room } from '../models/Room.js';
 import { socketUserMap } from './index.js';
 import { buildSyncState } from '../utils/syncEngine.js';
 
+export async function handleUserLeftRoom(io: Server, socket: Socket, roomCode: string, userId: string, username: string) {
+  try {
+    const code = roomCode.toUpperCase();
+    socket.leave(code);
+
+    const userData = socketUserMap.get(socket.id);
+    if (userData) {
+      userData.roomCode = null;
+    }
+
+    const room = await Room.findOne({ roomCode: code, isActive: true });
+    if (room) {
+      const participant = room.participants.find((p) => p.userId.toString() === userId);
+      if (participant) {
+        participant.isOnline = false;
+      }
+
+      // HOST MIGRATION LOGIC
+      if (room.hostId.toString() === userId) {
+        const nextHost = room.participants.find((p) => p.isOnline && p.userId.toString() !== userId);
+        if (nextHost) {
+          room.hostId = nextHost.userId;
+          console.log(`👑 Host migrated to ${nextHost.username} in room ${code}`);
+          io.to(code).emit('room:host-migrated', { newHostId: nextHost.userId.toString() });
+        }
+      }
+
+      await room.save();
+    }
+
+    socket.to(code).emit('room:user-left', {
+      userId,
+      username,
+    });
+
+    console.log(`👤 ${username} left room ${code}`);
+  } catch (error) {
+    console.error('Room leave error:', error);
+  }
+}
+
 export function setupRoomHandlers(io: Server, socket: Socket): void {
   const userId = (socket as any).userId as string;
   const username = (socket as any).username as string;
@@ -70,33 +111,7 @@ export function setupRoomHandlers(io: Server, socket: Socket): void {
 
   // Leave a room
   socket.on('room:leave', async ({ roomCode }: { roomCode: string }) => {
-    try {
-      const code = roomCode.toUpperCase();
-      socket.leave(code);
-
-      const userData = socketUserMap.get(socket.id);
-      if (userData) {
-        userData.roomCode = null;
-      }
-
-      const room = await Room.findOne({ roomCode: code });
-      if (room) {
-        const participant = room.participants.find((p) => p.userId.toString() === userId);
-        if (participant) {
-          participant.isOnline = false;
-        }
-        await room.save();
-      }
-
-      socket.to(code).emit('room:user-left', {
-        userId,
-        username,
-      });
-
-      console.log(`👤 ${username} left room ${code}`);
-    } catch (error) {
-      console.error('Room leave error:', error);
-    }
+    await handleUserLeftRoom(io, socket, roomCode, userId, username);
   });
 
   // Update room settings
