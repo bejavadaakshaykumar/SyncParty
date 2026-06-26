@@ -6,6 +6,7 @@ import { apiLimiter } from './middleware/rateLimiter.js';
 import authRoutes from './routes/auth.js';
 import roomRoutes from './routes/rooms.js';
 import youtubeRoutes from './routes/youtube.js';
+import playlistRoutes from './routes/playlists.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/youtube', youtubeRoutes);
+app.use('/api/playlists', playlistRoutes);
 
 // 404 handler
 app.use((_req, res) => {
