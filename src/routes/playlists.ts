@@ -1,31 +1,30 @@
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import { z } from 'zod';
-import { requireAuth } from '../middleware/auth.js';
-import { validateRequest } from '../middleware/validation.js';
+import { authMiddleware, type AuthRequest } from '../middleware/auth.js';
+import { validate } from '../middleware/validation.js';
 import { Playlist } from '../models/Playlist.js';
 
 const router = Router();
 
+// Middleware to ensure user is authenticated
+router.use(authMiddleware as RequestHandler);
+
 const createPlaylistSchema = z.object({
-  body: z.object({
-    name: z.string().min(1, 'Name is required').max(50, 'Name too long'),
-  }),
+  name: z.string().min(1, 'Name is required').max(50, 'Name too long'),
 });
 
 const addTrackSchema = z.object({
-  body: z.object({
-    videoId: z.string().min(1),
-    title: z.string().min(1),
-    thumbnail: z.string().min(1),
-    channelTitle: z.string().min(1),
-    duration: z.number().min(0),
-  }),
+  videoId: z.string().min(1),
+  title: z.string().min(1),
+  thumbnail: z.string().min(1),
+  channelTitle: z.string().min(1),
+  duration: z.number().min(0),
 });
 
 // Get user's playlists
-router.get('/', requireAuth, async (req: any, res) => {
+router.get('/', async (req: any, res) => {
   try {
-    const playlists = await Playlist.find({ ownerId: req.user.id }).sort({ createdAt: -1 });
+    const playlists = await Playlist.find({ ownerId: req.userId }).sort({ createdAt: -1 });
     res.json(playlists);
   } catch (error) {
     console.error('Fetch playlists error:', error);
@@ -34,11 +33,11 @@ router.get('/', requireAuth, async (req: any, res) => {
 });
 
 // Create a new playlist
-router.post('/', requireAuth, validateRequest(createPlaylistSchema), async (req: any, res) => {
+router.post('/', validate(createPlaylistSchema), async (req: any, res) => {
   try {
     const playlist = new Playlist({
       name: req.body.name,
-      ownerId: req.user.id,
+      ownerId: req.userId,
       tracks: [],
     });
     await playlist.save();
@@ -50,9 +49,9 @@ router.post('/', requireAuth, validateRequest(createPlaylistSchema), async (req:
 });
 
 // Add track to playlist
-router.post('/:id/tracks', requireAuth, validateRequest(addTrackSchema), async (req: any, res) => {
+router.post('/:id/tracks', validate(addTrackSchema), async (req: any, res: any) => {
   try {
-    const playlist = await Playlist.findOne({ _id: req.params.id, ownerId: req.user.id });
+    const playlist = await Playlist.findOne({ _id: req.params.id, ownerId: req.userId });
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
@@ -67,15 +66,15 @@ router.post('/:id/tracks', requireAuth, validateRequest(addTrackSchema), async (
 });
 
 // Remove track from playlist
-router.delete('/:id/tracks/:trackId', requireAuth, async (req: any, res) => {
+router.delete('/:id/tracks/:trackId', async (req: any, res: any) => {
   try {
-    const playlist = await Playlist.findOne({ _id: req.params.id, ownerId: req.user.id });
+    const playlist = await Playlist.findOne({ _id: req.params.id, ownerId: req.userId });
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
 
-    // Pull track by its specific _id in the tracks array
-    playlist.tracks.pull({ _id: req.params.trackId });
+    // Filter track out
+    playlist.tracks = playlist.tracks.filter((t: any) => t._id?.toString() !== req.params.trackId);
     await playlist.save();
     res.json(playlist);
   } catch (error) {
@@ -85,9 +84,9 @@ router.delete('/:id/tracks/:trackId', requireAuth, async (req: any, res) => {
 });
 
 // Delete playlist
-router.delete('/:id', requireAuth, async (req: any, res) => {
+router.delete('/:id', async (req: any, res: any) => {
   try {
-    const playlist = await Playlist.findOneAndDelete({ _id: req.params.id, ownerId: req.user.id });
+    const playlist = await Playlist.findOneAndDelete({ _id: req.params.id, ownerId: req.userId });
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }

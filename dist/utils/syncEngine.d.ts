@@ -20,6 +20,7 @@ export declare function buildSyncState(track: IRoom['currentTrack']): {
     thumbnail?: undefined;
     channelTitle?: undefined;
     duration?: undefined;
+    timestamp?: undefined;
 } | {
     videoId: string;
     title: string;
@@ -28,5 +29,6 @@ export declare function buildSyncState(track: IRoom['currentTrack']): {
     duration: number;
     time: number;
     isPlaying: boolean;
+    timestamp: number;
 };
 //# sourceMappingURL=syncEngine.d.ts.map

@@ -11,6 +11,7 @@ const rateLimiter_js_1 = require("./middleware/rateLimiter.js");
 const auth_js_1 = __importDefault(require("./routes/auth.js"));
 const rooms_js_1 = __importDefault(require("./routes/rooms.js"));
 const youtube_js_1 = __importDefault(require("./routes/youtube.js"));
+const playlists_js_1 = __importDefault(require("./routes/playlists.js"));
 const app = (0, express_1.default)();
 // Security
 app.use((0, helmet_1.default)({ contentSecurityPolicy: false }));
@@ -26,6 +27,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', auth_js_1.default);
 app.use('/api/rooms', rooms_js_1.default);
 app.use('/api/youtube', youtube_js_1.default);
+app.use('/api/playlists', playlists_js_1.default);
 // 404 handler
 app.use((_req, res) => {
     res.status(404).json({ error: 'Not found' });

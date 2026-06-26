@@ -40,6 +40,7 @@ function buildSyncState(track) {
         duration: track.duration,
         time: calculateCurrentTime(track),
         isPlaying: track.isPlaying,
+        timestamp: Date.now(),
     };
 }
 //# sourceMappingURL=syncEngine.js.map

@@ -41,13 +41,10 @@ function setupSocketIO(io) {
         (0, queueHandlers_js_1.setupQueueHandlers)(io, socket);
         (0, chatHandlers_js_1.setupChatHandlers)(io, socket);
         // Handle disconnect
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             const userData = exports.socketUserMap.get(socket.id);
             if (userData?.roomCode) {
-                socket.to(userData.roomCode).emit('room:user-left', {
-                    userId: userData.userId,
-                    username: userData.username,
-                });
+                await (0, roomHandlers_js_1.handleUserLeftRoom)(io, socket, userData.roomCode, userData.userId, userData.username);
             }
             exports.socketUserMap.delete(socket.id);
             console.log(`🔌 User disconnected: ${username} (${socket.id})`);
