@@ -22,7 +22,7 @@ function startHeartbeat(io: Server, roomCode: string): void {
     } catch (error) {
       console.error('Heartbeat error:', error);
     }
-  }, 5000); // Every 5 seconds
+  }, 2000); // Every 2 seconds
 
   roomHeartbeats.set(roomCode, interval);
 }
