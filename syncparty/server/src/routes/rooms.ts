@@ -12,22 +12,8 @@ router.post('/', authMiddleware, validate(createRoomSchema), async (req: AuthReq
   try {
     const { name } = req.body;
 
-    // Check if the user already has an active room as a host
-    const existingRoom = await Room.findOne({ hostId: req.userId, isActive: true });
-    if (existingRoom) {
-      return res.status(200).json({
-        roomCode: existingRoom.roomCode,
-        name: existingRoom.name,
-        hostId: existingRoom.hostId,
-        participants: existingRoom.participants,
-        isActive: existingRoom.isActive,
-      });
-    }
-
-    // Generate unique room code based on username
-    const baseCode = (req.username || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 8);
-    let roomCode = (baseCode.length >= 3) ? baseCode : createRoomCode();
-    
+    // Generate unique room code
+    let roomCode = createRoomCode();
     let attempts = 0;
     while (await Room.findOne({ roomCode }) && attempts < 10) {
       roomCode = createRoomCode();
